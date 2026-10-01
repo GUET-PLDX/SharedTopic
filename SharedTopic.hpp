@@ -15,6 +15,7 @@ depends: []
 === END MANIFEST === */
 // clang-format on
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -83,7 +84,7 @@ class SharedTopic : public LibXR::Application {
     } else if (argc == 4) {
       if (strcmp(argv[1], "monitor") == 0) {
         int time = atoi(argv[2]);
-        int delay = atoi(argv[3]);
+        int delay = std::clamp(atoi(argv[3]), 2, 1000);
         auto start = self->rx_count_;
         while (time > 0) {
           LibXR::Thread::Sleep(delay);
