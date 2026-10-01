@@ -89,8 +89,8 @@ class SharedTopic : public LibXR::Application {
         while (time > 0) {
           LibXR::Thread::Sleep(delay);
           LibXR::STDIO::Printf<"%f Mbps\r\n">(
-              static_cast<float>(self->rx_count_ - start) * 8.0 / 1024.0 /
-              1024.0 / delay * 1000.0);
+              static_cast<float>(self->rx_count_ - start) * 8.0f / 1024.0f /
+              1024.0f / static_cast<float>(delay) * 1000.0f);
           time -= delay;
           start = self->rx_count_;
         }
