@@ -2,15 +2,8 @@
 
 // clang-format off
 /* === MODULE MANIFEST V2 ===
-module_description: SharedTopic 是一个基于 UART 的多 Topic 数据共享与解析服务端模块 / SharedTopic is a UART-based multi-topic data sharing and parsing server module
-constructor_args:
-  - uart_name: "usart1"
-  - buffer_size: 256
-  - topic_configs:
-    - "topic1"
-    - ["topic2", "libxr_def_domain"]
-template_args: []
-required_hardware: uart_name, ramfs
+module_description: SharedTopic 是一个基于 UART 的多 Topic 数据共享与解析服务端模块 / SharedTopic is
+  a UART-based multi-topic data sharing and parsing server module
 depends: []
 === END MANIFEST === */
 // clang-format on
@@ -20,7 +13,7 @@ depends: []
 #include <cstdlib>
 #include <cstring>
 
-#include "app_framework.hpp"
+#include "libxr.hpp"
 #include "libxr_def.hpp"
 #include "libxr_rw.hpp"
 #include "libxr_type.hpp"
@@ -30,7 +23,7 @@ depends: []
 #include "thread.hpp"
 #include "uart.hpp"
 
-class SharedTopic : public LibXR::Application {
+class SharedTopic {
  public:
   struct TopicConfig {
     const char* name;
@@ -42,10 +35,10 @@ class SharedTopic : public LibXR::Application {
         : name(name), domain(domain) {}
   };
 
-  SharedTopic(LibXR::HardwareContainer& hw, LibXR::ApplicationManager& app,
-              const char* uart_name, uint32_t buffer_size,
+  SharedTopic(LibXR::RamFS& ramfs, LibXR::UART& uart, const char* uart_name,
+              uint32_t buffer_size,
               std::initializer_list<TopicConfig> topic_configs)
-      : uart_(hw.template FindOrExit<LibXR::UART>({uart_name})),
+      : uart_((&uart)),
         server_(buffer_size),
         rx_buffer_(new uint8_t[buffer_size], buffer_size),
         cmd_name_(new char[sizeof("shared_topic:") + strlen(uart_name)]),
@@ -65,15 +58,13 @@ class SharedTopic : public LibXR::Application {
       server_.Register(topic);
     }
 
-    hw.template FindOrExit<LibXR::RamFS>({"ramfs"})->Add(cmd_file_);
+    (&ramfs)->Add(cmd_file_);
 
     rx_thread_.Create<SharedTopic*>(this, RxThread, "shared_topic", 2048,
                                     LibXR::Thread::Priority::MEDIUM);
-
-    app.Register(*this);
   }
 
-  void OnMonitor() override {}
+  void OnMonitor() {}
 
   static int CommandFunc(SharedTopic* self, int argc, char** argv) {
     if (argc == 1) {
