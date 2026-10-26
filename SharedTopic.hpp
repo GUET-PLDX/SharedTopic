@@ -35,15 +35,16 @@ class SharedTopic {
         : name(name), domain(domain) {}
   };
 
-  SharedTopic(LibXR::RamFS& ramfs, LibXR::UART& uart, const char* uart_name,
-              uint32_t buffer_size,
-              std::initializer_list<TopicConfig> topic_configs)
-      : uart_((&uart)),
+  SharedTopic(LibXR::UART& uart, LibXR::RamFS& ramfs,
+              const char* link_name = "uart", uint32_t buffer_size = 256,
+              std::initializer_list<TopicConfig> topic_configs =
+                  {"topic1", {"topic2", "libxr_def_domain"}})
+      : uart_(&uart),
         server_(buffer_size),
         rx_buffer_(new uint8_t[buffer_size], buffer_size),
-        cmd_name_(new char[sizeof("shared_topic:") + strlen(uart_name)]),
+        cmd_name_(new char[sizeof("shared_topic:") + strlen(link_name)]),
         cmd_file_((strcpy(cmd_name_, "shared_topic:"),
-                   strcpy(cmd_name_ + strlen("shared_topic:"), uart_name),
+                   strcpy(cmd_name_ + strlen("shared_topic:"), link_name),
                    LibXR::RamFS::CreateFile(cmd_name_, CommandFunc, this))) {
     ASSERT(uart_->read_port_ != nullptr);
     ASSERT(uart_->read_port_->Readable());
@@ -58,7 +59,7 @@ class SharedTopic {
       server_.Register(topic);
     }
 
-    (&ramfs)->Add(cmd_file_);
+    ramfs.Add(cmd_file_);
 
     rx_thread_.Create<SharedTopic*>(this, RxThread, "shared_topic", 2048,
                                     LibXR::Thread::Priority::MEDIUM);
