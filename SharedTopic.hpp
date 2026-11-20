@@ -122,18 +122,14 @@ class SharedTopic {
     }
   }
 
-  LibXR::UART* uart_;
-
-  LibXR::Topic::Server server_;
-
-  LibXR::RawData rx_buffer_;
-
   size_t rx_count_ = 0;
 
+  LibXR::UART* uart_;
+  LibXR::Topic::Server server_;
+  LibXR::RawData rx_buffer_;
+
   char* cmd_name_;
-
   LibXR::RamFS::File cmd_file_;
-
   LibXR::Semaphore rx_sem_;
   LibXR::Thread rx_thread_;
 };
